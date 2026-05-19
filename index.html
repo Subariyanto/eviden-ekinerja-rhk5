@@ -116,6 +116,7 @@ body{background:#fff;font-size:12pt}
 <div class="container">
 <div class="nav no-print" id="main-nav">
 <button class="active" data-tab="dashboard" onclick="showTab('dashboard',this)">&#128202; Dashboard</button>
+<button data-tab="madrasah" onclick="showTab('madrasah',this)">&#127979; Data Madrasah</button>
 <button data-tab="eviden" onclick="showTab('eviden',this)">&#128221; Eviden</button>
 <button data-tab="download" onclick="showTab('download',this)">&#128229; Download</button>
 <button data-tab="cetak" onclick="showTab('cetak',this)">&#128424; Cetak Eviden</button>
@@ -126,6 +127,44 @@ body{background:#fff;font-size:12pt}
 <div class="stats-grid" id="stats-grid"></div>
 <div class="card"><h3 style="margin-bottom:16px">Rekap Progress 6 Butir Eviden RHK5</h3><div id="dashboard-progress"></div></div>
 <div class="card"><h3 style="margin-bottom:16px">Checklist Kelengkapan Dokumen</h3><div id="dashboard-checklist"></div></div>
+</div>
+
+<!-- TAB DATA MADRASAH -->
+<div id="tab-madrasah" class="tab-content">
+<div class="card">
+<h3 style="margin-bottom:16px">&#127979; Data Madrasah Binaan</h3>
+<div id="madrasah-stats" style="margin-bottom:16px"></div>
+<button class="btn-primary" onclick="openMadrasahForm()" style="margin-bottom:16px">+ Tambah Madrasah</button>
+<div class="table-wrap"><table id="madrasah-table"><thead><tr><th>No</th><th>Nama Madrasah</th><th>NPSN</th><th>Jenjang</th><th>Kepala Madrasah</th><th>Akreditasi</th><th>Guru</th><th>Siswa</th><th>Aksi</th></tr></thead><tbody id="madrasah-tbody"></tbody></table></div>
+</div>
+</div>
+
+<!-- MODAL FORM MADRASAH -->
+<div id="modal-madrasah" class="modal-overlay hidden" onclick="if(event.target===this)closeMadrasahForm()">
+<div class="modal">
+<h3 style="margin-bottom:16px" id="madrasah-form-title">Tambah Data Madrasah</h3>
+<div class="grid-2">
+<div class="form-group"><label>Nama Madrasah</label><input type="text" id="md-nama" placeholder="MI/MTs/MA ..."></div>
+<div class="form-group"><label>NPSN</label><input type="text" id="md-npsn" placeholder="8 digit NPSN"></div>
+</div>
+<div class="form-group"><label>Alamat</label><input type="text" id="md-alamat" placeholder="Alamat lengkap madrasah"></div>
+<div class="grid-2">
+<div class="form-group"><label>Kepala Madrasah</label><input type="text" id="md-kamad" placeholder="Nama Kepala Madrasah"></div>
+<div class="form-group"><label>NIP Kepala Madrasah</label><input type="text" id="md-nip-kamad" placeholder="NIP"></div>
+</div>
+<div class="grid-3">
+<div class="form-group"><label>Jenjang</label><select id="md-jenjang"><option value="MI">MI</option><option value="MTs">MTs</option><option value="MA">MA</option><option value="RA">RA</option></select></div>
+<div class="form-group"><label>Status Akreditasi</label><select id="md-akreditasi"><option value="A">A (Unggul)</option><option value="B">B (Baik)</option><option value="C">C (Cukup)</option><option value="Belum">Belum Terakreditasi</option></select></div>
+<div class="form-group"><label>Nilai Akreditasi</label><input type="number" id="md-nilai" placeholder="0-100" min="0" max="100"></div>
+</div>
+<div class="grid-2">
+<div class="form-group"><label>Jumlah Guru</label><input type="number" id="md-guru" placeholder="0" min="0"></div>
+<div class="form-group"><label>Jumlah Siswa</label><input type="number" id="md-siswa" placeholder="0" min="0"></div>
+</div>
+<div class="form-group"><label>Keterangan</label><input type="text" id="md-keterangan" placeholder="Catatan tambahan (opsional)"></div>
+<input type="hidden" id="md-edit-id" value="">
+<div style="display:flex;gap:8px;margin-top:16px"><button class="btn-primary" onclick="saveMadrasah()">Simpan</button><button class="btn-secondary" onclick="closeMadrasahForm()">Batal</button></div>
+</div>
 </div>
 
 <!-- TAB EVIDEN -->
@@ -236,28 +275,28 @@ const RHK_DATA = {
     target: 26,
     durasi: '3 bulan',
     dokumen: [
-      {id:'surat-tugas', nama:'Surat Tugas / Jadwal Kegiatan'},
-      {id:'undangan', nama:'Undangan Rapat/Koordinasi'},
-      {id:'daftar-hadir', nama:'Daftar Hadir'},
-      {id:'notulen', nama:'Notulen / Berita Acara'},
-      {id:'laporan', nama:'Laporan Kegiatan'},
-      {id:'pengesahan', nama:'Lembar Pengesahan'},
-      {id:'rekap-capaian', nama:'Rekap Capaian'}
+      {id:'surat-tugas', nama:'Surat Tugas Pendampingan Kolaboratif'},
+      {id:'undangan', nama:'Undangan Rapat Koordinasi (Kamad + Komite + Masyarakat)'},
+      {id:'daftar-hadir', nama:'Daftar Hadir Kegiatan'},
+      {id:'notulen', nama:'Notulen/Berita Acara Pertemuan Koordinasi'},
+      {id:'foto', nama:'Dokumentasi Foto Kegiatan'},
+      {id:'laporan', nama:'Laporan Pendampingan Kolaboratif'},
+      {id:'rekap-capaian', nama:'Rekap Jumlah Madrasah yang Didampingi'}
     ]
   },
   8: {
     kode: 'RHK5-8',
-    nama: 'Keterlibatan dalam jejaring profesi untuk diseminasi praktik baik',
+    nama: 'Keterlibatan dalam jejaring profesi untuk diseminasi praktik baik pengawasan',
     target: 100,
     durasi: '6 bulan',
     dokumen: [
-      {id:'surat-tugas', nama:'Surat Tugas / Jadwal Kegiatan'},
-      {id:'undangan', nama:'Undangan Rapat/Koordinasi'},
-      {id:'daftar-hadir', nama:'Daftar Hadir'},
-      {id:'notulen', nama:'Notulen / Berita Acara'},
-      {id:'laporan', nama:'Laporan Kegiatan'},
-      {id:'pengesahan', nama:'Lembar Pengesahan'},
-      {id:'rekap-capaian', nama:'Rekap Capaian'}
+      {id:'kartu-anggota', nama:'Kartu Anggota/Surat Keterangan Keaktifan Organisasi Profesi'},
+      {id:'sertifikat', nama:'Sertifikat Kegiatan/Piagam/Bukti Keikutsertaan'},
+      {id:'surat-tugas', nama:'Undangan/Surat Tugas Forum Profesi'},
+      {id:'daftar-hadir', nama:'Daftar Hadir/Screenshot Kehadiran Daring'},
+      {id:'materi', nama:'Materi Diseminasi Praktik Baik'},
+      {id:'laporan', nama:'Laporan Keaktifan Organisasi Profesi'},
+      {id:'publikasi', nama:'Bukti Publikasi/Diseminasi'}
     ]
   },
   9: {
@@ -266,13 +305,14 @@ const RHK_DATA = {
     target: 82,
     durasi: '3 bulan',
     dokumen: [
-      {id:'surat-tugas', nama:'Surat Tugas / Jadwal Kegiatan'},
-      {id:'undangan', nama:'Undangan Rapat/Koordinasi'},
-      {id:'daftar-hadir', nama:'Daftar Hadir'},
-      {id:'notulen', nama:'Notulen / Berita Acara'},
-      {id:'laporan', nama:'Laporan Kegiatan'},
-      {id:'pengesahan', nama:'Lembar Pengesahan'},
-      {id:'rekap-capaian', nama:'Rekap Capaian'}
+      {id:'surat-tugas', nama:'Surat Tugas Pendampingan Penyusunan/Reviu KM'},
+      {id:'instrumen', nama:'Instrumen Reviu Kurikulum Madrasah'},
+      {id:'daftar-madrasah', nama:'Daftar Madrasah Binaan yang Didampingi'},
+      {id:'daftar-hadir', nama:'Daftar Hadir Pendampingan'},
+      {id:'notulen', nama:'Notulen/Berita Acara Pendampingan'},
+      {id:'foto', nama:'Dokumentasi Foto Kegiatan'},
+      {id:'dokumen-km', nama:'Dokumen KM Sebelum dan Sesudah Reviu'},
+      {id:'laporan', nama:'Laporan Pendampingan Penyusunan/Reviu KM'}
     ]
   },
   10: {
@@ -281,13 +321,13 @@ const RHK_DATA = {
     target: 26,
     durasi: '3 bulan',
     dokumen: [
-      {id:'surat-tugas', nama:'Surat Tugas / Jadwal Kegiatan'},
-      {id:'undangan', nama:'Undangan Rapat/Koordinasi'},
-      {id:'daftar-hadir', nama:'Daftar Hadir'},
-      {id:'notulen', nama:'Notulen / Berita Acara'},
-      {id:'laporan', nama:'Laporan Kegiatan'},
-      {id:'pengesahan', nama:'Lembar Pengesahan'},
-      {id:'rekap-capaian', nama:'Rekap Capaian'}
+      {id:'program', nama:'Program Pembinaan Karakter dan Kepramukaan'},
+      {id:'instrumen', nama:'Instrumen Monitoring Penilaian Karakter'},
+      {id:'data-karakter', nama:'Data Awal dan Data Akhir Penilaian Karakter'},
+      {id:'daftar-hadir', nama:'Daftar Hadir Pembinaan/Pendampingan'},
+      {id:'notulen', nama:'Notulen/Berita Acara Pembinaan'},
+      {id:'foto', nama:'Dokumentasi Foto Kegiatan'},
+      {id:'laporan', nama:'Laporan Peningkatan Nilai Karakter Siswa'}
     ]
   },
   11: {
@@ -296,13 +336,14 @@ const RHK_DATA = {
     target: 82,
     durasi: '12 bulan',
     dokumen: [
-      {id:'surat-tugas', nama:'Surat Tugas / Jadwal Kegiatan'},
-      {id:'undangan', nama:'Undangan Rapat/Koordinasi'},
-      {id:'daftar-hadir', nama:'Daftar Hadir'},
-      {id:'notulen', nama:'Notulen / Berita Acara'},
-      {id:'laporan', nama:'Laporan Kegiatan'},
-      {id:'pengesahan', nama:'Lembar Pengesahan'},
-      {id:'rekap-capaian', nama:'Rekap Capaian'}
+      {id:'jadwal', nama:'Jadwal Pembinaan/Pendampingan/Monev per Triwulan'},
+      {id:'instrumen', nama:'Instrumen Reviu dan Monev Perangkat Kurikulum'},
+      {id:'daftar-perangkat', nama:'Daftar Perangkat Kurikulum yang Direviu'},
+      {id:'hasil-reviu', nama:'Lembar Hasil Reviu (Temuan dan Rekomendasi)'},
+      {id:'daftar-hadir', nama:'Daftar Hadir Pembinaan/Pendampingan'},
+      {id:'foto', nama:'Dokumentasi Foto Kegiatan'},
+      {id:'laporan', nama:'Laporan Monev dan Evaluasi Perangkat Kurikulum'},
+      {id:'tindak-lanjut', nama:'Bukti Tindak Lanjut Perbaikan'}
     ]
   },
   12: {
@@ -311,13 +352,15 @@ const RHK_DATA = {
     target: 49.20,
     durasi: '12 bulan',
     dokumen: [
-      {id:'surat-tugas', nama:'Surat Tugas / Jadwal Kegiatan'},
-      {id:'undangan', nama:'Undangan Rapat/Koordinasi'},
-      {id:'daftar-hadir', nama:'Daftar Hadir'},
-      {id:'notulen', nama:'Notulen / Berita Acara'},
-      {id:'laporan', nama:'Laporan Kegiatan'},
-      {id:'pengesahan', nama:'Lembar Pengesahan'},
-      {id:'rekap-capaian', nama:'Rekap Capaian'}
+      {id:'data-madrasah', nama:'Data Madrasah Sasaran Pendampingan Akreditasi'},
+      {id:'surat-tugas', nama:'Surat Tugas/Jadwal Pendampingan Akreditasi'},
+      {id:'instrumen', nama:'Instrumen Pemetaan Kesiapan Akreditasi'},
+      {id:'rekap-progres', nama:'Rekap Kondisi Awal dan Progres Akreditasi'},
+      {id:'daftar-hadir', nama:'Daftar Hadir Pembinaan/Pendampingan'},
+      {id:'notulen', nama:'Notulen/Berita Acara Kegiatan'},
+      {id:'foto', nama:'Dokumentasi Foto Kegiatan'},
+      {id:'laporan', nama:'Laporan Pendampingan Akreditasi Berkelanjutan'},
+      {id:'bukti-akreditasi', nama:'Bukti Pemenuhan Dokumen/Hasil Akreditasi'}
     ]
   }
 };
@@ -371,6 +414,7 @@ function showTab(tab,btn){
   document.querySelectorAll('#main-nav button').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
   if(tab==='dashboard')renderDashboard();
+  if(tab==='madrasah')renderMadrasahTab();
   if(tab==='eviden')renderEvidenTab();
   if(tab==='download')renderDownloadTab();
   if(tab==='cetak')renderCetakTab();
@@ -701,6 +745,237 @@ function getDocTemplate(rhk, docId){
         {id:'kesimpulan', label:'Kesimpulan', type:'textarea', placeholder:'Berdasarkan pelaksanaan kegiatan selama periode ..., capaian kinerja untuk '+data.kode+' adalah ...% dari target '+data.target+'%.'},
         {id:'tanggal', label:'Tanggal', type:'date', placeholder:''}
       ]
+    },
+    'foto': {
+      title: 'Dokumentasi Foto Kegiatan',
+      fields: [
+        {id:'kegiatan', label:'Nama Kegiatan', type:'text', placeholder:data.nama},
+        {id:'tanggal', label:'Tanggal Kegiatan', type:'date', placeholder:''},
+        {id:'tempat', label:'Tempat', type:'text', placeholder:''},
+        {id:'keterangan1', label:'Keterangan Foto 1', type:'text', placeholder:'Pembukaan kegiatan oleh ...'},
+        {id:'keterangan2', label:'Keterangan Foto 2', type:'text', placeholder:'Penyampaian materi oleh ...'},
+        {id:'keterangan3', label:'Keterangan Foto 3', type:'text', placeholder:'Diskusi kelompok ...'},
+        {id:'keterangan4', label:'Keterangan Foto 4', type:'text', placeholder:'Foto bersama peserta'}
+      ],
+      hasUpload: true
+    },
+    'kartu-anggota': {
+      title: 'Kartu Anggota/Surat Keterangan Keaktifan Organisasi Profesi',
+      fields: [
+        {id:'nama_organisasi', label:'Nama Organisasi Profesi', type:'text', placeholder:'POKJAWAS / APSI / ...'},
+        {id:'nomor_anggota', label:'Nomor Anggota', type:'text', placeholder:''},
+        {id:'jabatan_organisasi', label:'Jabatan dalam Organisasi', type:'text', placeholder:'Anggota / Pengurus / Ketua'},
+        {id:'masa_berlaku', label:'Masa Berlaku', type:'text', placeholder:'2024 - 2029'},
+        {id:'keterangan', label:'Keterangan Tambahan', type:'textarea', placeholder:'Aktif mengikuti kegiatan organisasi sejak tahun ...'}
+      ],
+      hasUpload: true
+    },
+    'sertifikat': {
+      title: 'Sertifikat Kegiatan/Piagam/Bukti Keikutsertaan',
+      fields: [
+        {id:'nama_kegiatan', label:'Nama Kegiatan/Pelatihan', type:'text', placeholder:'Workshop / Seminar / Diklat ...'},
+        {id:'penyelenggara', label:'Penyelenggara', type:'text', placeholder:'Balai Diklat / Kemenag / ...'},
+        {id:'tanggal', label:'Tanggal Pelaksanaan', type:'date', placeholder:''},
+        {id:'nomor_sertifikat', label:'Nomor Sertifikat', type:'text', placeholder:''},
+        {id:'jam_pelatihan', label:'Jumlah JP/Jam Pelatihan', type:'text', placeholder:'32 JP'},
+        {id:'keterangan', label:'Keterangan', type:'textarea', placeholder:'Materi yang dipelajari: ...'}
+      ],
+      hasUpload: true
+    },
+    'materi': {
+      title: 'Materi Diseminasi Praktik Baik',
+      fields: [
+        {id:'judul_materi', label:'Judul Materi', type:'text', placeholder:'Praktik Baik Pengawasan Madrasah dalam ...'},
+        {id:'sasaran', label:'Sasaran Diseminasi', type:'text', placeholder:'Pengawas Madrasah se-Kabupaten/Kota ...'},
+        {id:'tanggal', label:'Tanggal Diseminasi', type:'date', placeholder:''},
+        {id:'tempat', label:'Tempat/Media', type:'text', placeholder:'Zoom Meeting / Aula Kemenag ...'},
+        {id:'ringkasan', label:'Ringkasan Materi', type:'textarea', placeholder:'1. Latar belakang\n2. Tujuan\n3. Langkah-langkah\n4. Hasil\n5. Rekomendasi'},
+        {id:'metode', label:'Metode Penyampaian', type:'text', placeholder:'Presentasi, diskusi, praktik'}
+      ],
+      hasUpload: true
+    },
+    'publikasi': {
+      title: 'Bukti Publikasi/Diseminasi',
+      fields: [
+        {id:'judul', label:'Judul Publikasi', type:'text', placeholder:''},
+        {id:'media', label:'Media Publikasi', type:'text', placeholder:'Jurnal / Blog / Media Sosial / Website Kemenag'},
+        {id:'tanggal', label:'Tanggal Publikasi', type:'date', placeholder:''},
+        {id:'url', label:'Link/URL (jika ada)', type:'text', placeholder:'https://...'},
+        {id:'ringkasan', label:'Ringkasan Isi', type:'textarea', placeholder:'Artikel/publikasi ini membahas tentang ...'}
+      ],
+      hasUpload: true
+    },
+    'instrumen': {
+      title: 'Instrumen Reviu/Monitoring',
+      fields: [
+        {id:'judul', label:'Judul Instrumen', type:'text', placeholder:'Instrumen Reviu '+data.nama},
+        {id:'tujuan', label:'Tujuan Instrumen', type:'textarea', placeholder:'Untuk mengukur/menilai ...'},
+        {id:'aspek1', label:'Aspek/Komponen 1', type:'text', placeholder:''},
+        {id:'indikator1', label:'Indikator Aspek 1', type:'textarea', placeholder:'a. ...\nb. ...\nc. ...'},
+        {id:'aspek2', label:'Aspek/Komponen 2', type:'text', placeholder:''},
+        {id:'indikator2', label:'Indikator Aspek 2', type:'textarea', placeholder:'a. ...\nb. ...\nc. ...'},
+        {id:'aspek3', label:'Aspek/Komponen 3', type:'text', placeholder:''},
+        {id:'indikator3', label:'Indikator Aspek 3', type:'textarea', placeholder:'a. ...\nb. ...\nc. ...'},
+        {id:'aspek4', label:'Aspek/Komponen 4', type:'text', placeholder:''},
+        {id:'indikator4', label:'Indikator Aspek 4', type:'textarea', placeholder:'a. ...\nb. ...\nc. ...'},
+        {id:'skala', label:'Skala Penilaian', type:'text', placeholder:'1-4 (1=Kurang, 2=Cukup, 3=Baik, 4=Sangat Baik)'},
+        {id:'catatan', label:'Catatan Penggunaan', type:'textarea', placeholder:'Instrumen ini digunakan saat ...'}
+      ]
+    },
+    'daftar-madrasah': {
+      title: 'Daftar Madrasah Binaan yang Didampingi',
+      fields: [
+        {id:'periode', label:'Periode Pendampingan', type:'text', placeholder:'Bulan ... s.d. ... Tahun ...'},
+        {id:'jumlah', label:'Jumlah Madrasah', type:'text', placeholder:''},
+        {id:'keterangan', label:'Keterangan Umum', type:'textarea', placeholder:'Pendampingan dilakukan pada madrasah binaan berikut:'}
+      ],
+      autoMadrasah: true
+    },
+    'dokumen-km': {
+      title: 'Dokumen Kurikulum Madrasah Sebelum dan Sesudah Reviu',
+      fields: [
+        {id:'nama_madrasah', label:'Nama Madrasah', type:'text', placeholder:''},
+        {id:'versi_sebelum', label:'Kondisi KM Sebelum Reviu', type:'textarea', placeholder:'1. Belum mengintegrasikan Pembelajaran Mendalam\n2. Belum memuat Kurikulum Berbasis Cinta\n3. ...'},
+        {id:'versi_sesudah', label:'Kondisi KM Sesudah Reviu', type:'textarea', placeholder:'1. Sudah mengintegrasikan Pembelajaran Mendalam\n2. Sudah memuat Kurikulum Berbasis Cinta\n3. ...'},
+        {id:'rekomendasi', label:'Rekomendasi Perbaikan', type:'textarea', placeholder:'1. ...\n2. ...'},
+        {id:'tanggal_reviu', label:'Tanggal Reviu', type:'date', placeholder:''}
+      ],
+      hasUpload: true
+    },
+    'program': {
+      title: 'Program Pembinaan Karakter dan Kepramukaan',
+      fields: [
+        {id:'judul', label:'Judul Program', type:'text', placeholder:'Program Pembinaan Karakter Melalui Kegiatan Kepramukaan'},
+        {id:'latar_belakang', label:'Latar Belakang', type:'textarea', placeholder:'Pembinaan karakter peserta didik merupakan ...'},
+        {id:'tujuan', label:'Tujuan Program', type:'textarea', placeholder:'1. Meningkatkan nilai karakter peserta didik\n2. Mengoptimalkan kegiatan kepramukaan\n3. ...'},
+        {id:'sasaran', label:'Sasaran', type:'textarea', placeholder:'Peserta didik MI/MTs/MA di madrasah binaan'},
+        {id:'kegiatan', label:'Rincian Kegiatan', type:'textarea', placeholder:'1. Pembinaan rutin mingguan\n2. Perkemahan\n3. Bakti sosial\n4. ...'},
+        {id:'jadwal', label:'Jadwal Pelaksanaan', type:'textarea', placeholder:'Bulan 1: ...\nBulan 2: ...\nBulan 3: ...'},
+        {id:'indikator', label:'Indikator Keberhasilan', type:'textarea', placeholder:'1. Peningkatan nilai karakter minimal 26%\n2. ...'},
+        {id:'anggaran', label:'Sumber Dana/Anggaran', type:'text', placeholder:'BOS / Swadaya / ...'}
+      ]
+    },
+    'data-karakter': {
+      title: 'Data Awal dan Data Akhir Penilaian Karakter',
+      fields: [
+        {id:'nama_madrasah', label:'Nama Madrasah', type:'text', placeholder:''},
+        {id:'periode', label:'Periode Penilaian', type:'text', placeholder:'Semester .../Tahun ...'},
+        {id:'jumlah_siswa', label:'Jumlah Siswa Dinilai', type:'text', placeholder:''},
+        {id:'aspek_religius_awal', label:'Nilai Awal - Religius', type:'text', placeholder:'0-100'},
+        {id:'aspek_religius_akhir', label:'Nilai Akhir - Religius', type:'text', placeholder:'0-100'},
+        {id:'aspek_jujur_awal', label:'Nilai Awal - Jujur', type:'text', placeholder:'0-100'},
+        {id:'aspek_jujur_akhir', label:'Nilai Akhir - Jujur', type:'text', placeholder:'0-100'},
+        {id:'aspek_disiplin_awal', label:'Nilai Awal - Disiplin', type:'text', placeholder:'0-100'},
+        {id:'aspek_disiplin_akhir', label:'Nilai Akhir - Disiplin', type:'text', placeholder:'0-100'},
+        {id:'aspek_tanggung_jawab_awal', label:'Nilai Awal - Tanggung Jawab', type:'text', placeholder:'0-100'},
+        {id:'aspek_tanggung_jawab_akhir', label:'Nilai Akhir - Tanggung Jawab', type:'text', placeholder:'0-100'},
+        {id:'aspek_peduli_awal', label:'Nilai Awal - Peduli', type:'text', placeholder:'0-100'},
+        {id:'aspek_peduli_akhir', label:'Nilai Akhir - Peduli', type:'text', placeholder:'0-100'},
+        {id:'kesimpulan', label:'Kesimpulan Peningkatan', type:'textarea', placeholder:'Terjadi peningkatan rata-rata ...% pada aspek karakter peserta didik'}
+      ]
+    },
+    'jadwal': {
+      title: 'Jadwal Pembinaan/Pendampingan/Monev per Triwulan',
+      fields: [
+        {id:'tahun', label:'Tahun', type:'text', placeholder:new Date().getFullYear().toString()},
+        {id:'tw1_kegiatan', label:'Triwulan I - Kegiatan', type:'textarea', placeholder:'Januari: ...\nFebruari: ...\nMaret: ...'},
+        {id:'tw1_sasaran', label:'Triwulan I - Sasaran/Madrasah', type:'textarea', placeholder:'MI/MTs/MA ...'},
+        {id:'tw2_kegiatan', label:'Triwulan II - Kegiatan', type:'textarea', placeholder:'April: ...\nMei: ...\nJuni: ...'},
+        {id:'tw2_sasaran', label:'Triwulan II - Sasaran/Madrasah', type:'textarea', placeholder:'MI/MTs/MA ...'},
+        {id:'tw3_kegiatan', label:'Triwulan III - Kegiatan', type:'textarea', placeholder:'Juli: ...\nAgustus: ...\nSeptember: ...'},
+        {id:'tw3_sasaran', label:'Triwulan III - Sasaran/Madrasah', type:'textarea', placeholder:'MI/MTs/MA ...'},
+        {id:'tw4_kegiatan', label:'Triwulan IV - Kegiatan', type:'textarea', placeholder:'Oktober: ...\nNovember: ...\nDesember: ...'},
+        {id:'tw4_sasaran', label:'Triwulan IV - Sasaran/Madrasah', type:'textarea', placeholder:'MI/MTs/MA ...'}
+      ]
+    },
+    'daftar-perangkat': {
+      title: 'Daftar Perangkat Kurikulum yang Direviu',
+      fields: [
+        {id:'periode', label:'Periode', type:'text', placeholder:'Tahun ...'},
+        {id:'perangkat1', label:'Perangkat 1', type:'text', placeholder:'Silabus'},
+        {id:'status1', label:'Status Reviu 1', type:'text', placeholder:'Sudah direviu / Perlu perbaikan'},
+        {id:'perangkat2', label:'Perangkat 2', type:'text', placeholder:'RPP/Modul Ajar'},
+        {id:'status2', label:'Status Reviu 2', type:'text', placeholder:'Sudah direviu / Perlu perbaikan'},
+        {id:'perangkat3', label:'Perangkat 3', type:'text', placeholder:'Program Tahunan (Prota)'},
+        {id:'status3', label:'Status Reviu 3', type:'text', placeholder:'Sudah direviu / Perlu perbaikan'},
+        {id:'perangkat4', label:'Perangkat 4', type:'text', placeholder:'Program Semester (Prosem)'},
+        {id:'status4', label:'Status Reviu 4', type:'text', placeholder:'Sudah direviu / Perlu perbaikan'},
+        {id:'perangkat5', label:'Perangkat 5', type:'text', placeholder:'KKM/KKTP'},
+        {id:'status5', label:'Status Reviu 5', type:'text', placeholder:'Sudah direviu / Perlu perbaikan'},
+        {id:'perangkat6', label:'Perangkat 6', type:'text', placeholder:'Instrumen Penilaian'},
+        {id:'status6', label:'Status Reviu 6', type:'text', placeholder:'Sudah direviu / Perlu perbaikan'},
+        {id:'catatan', label:'Catatan Umum', type:'textarea', placeholder:'Secara keseluruhan perangkat kurikulum ...'}
+      ]
+    },
+    'hasil-reviu': {
+      title: 'Lembar Hasil Reviu (Temuan dan Rekomendasi)',
+      fields: [
+        {id:'nama_madrasah', label:'Nama Madrasah', type:'text', placeholder:''},
+        {id:'tanggal', label:'Tanggal Reviu', type:'date', placeholder:''},
+        {id:'perangkat', label:'Perangkat yang Direviu', type:'text', placeholder:'Silabus / RPP / Prota / Prosem / ...'},
+        {id:'temuan1', label:'Temuan 1', type:'textarea', placeholder:'Deskripsi temuan ...'},
+        {id:'rekomendasi1', label:'Rekomendasi 1', type:'textarea', placeholder:'Saran perbaikan ...'},
+        {id:'temuan2', label:'Temuan 2', type:'textarea', placeholder:'Deskripsi temuan ...'},
+        {id:'rekomendasi2', label:'Rekomendasi 2', type:'textarea', placeholder:'Saran perbaikan ...'},
+        {id:'temuan3', label:'Temuan 3', type:'textarea', placeholder:'Deskripsi temuan ...'},
+        {id:'rekomendasi3', label:'Rekomendasi 3', type:'textarea', placeholder:'Saran perbaikan ...'},
+        {id:'kesimpulan', label:'Kesimpulan', type:'textarea', placeholder:'Secara umum perangkat kurikulum ...'}
+      ]
+    },
+    'tindak-lanjut': {
+      title: 'Bukti Tindak Lanjut Perbaikan',
+      fields: [
+        {id:'nama_madrasah', label:'Nama Madrasah', type:'text', placeholder:''},
+        {id:'tanggal_reviu', label:'Tanggal Reviu Awal', type:'date', placeholder:''},
+        {id:'tanggal_tl', label:'Tanggal Tindak Lanjut', type:'date', placeholder:''},
+        {id:'temuan_awal', label:'Temuan Awal', type:'textarea', placeholder:'Hasil reviu menunjukkan bahwa ...'},
+        {id:'perbaikan', label:'Perbaikan yang Dilakukan', type:'textarea', placeholder:'1. ...\n2. ...\n3. ...'},
+        {id:'bukti', label:'Bukti Perbaikan', type:'textarea', placeholder:'Dokumen yang sudah diperbaiki: ...'},
+        {id:'status', label:'Status', type:'text', placeholder:'Selesai / Dalam proses / Belum'}
+      ],
+      hasUpload: true
+    },
+    'data-madrasah': {
+      title: 'Data Madrasah Sasaran Pendampingan Akreditasi',
+      fields: [
+        {id:'periode', label:'Periode Pendampingan', type:'text', placeholder:'Tahun ...'},
+        {id:'target_akreditasi', label:'Target Akreditasi', type:'text', placeholder:'Minimal B'},
+        {id:'keterangan', label:'Keterangan Umum', type:'textarea', placeholder:'Madrasah sasaran pendampingan akreditasi dipilih berdasarkan ...'}
+      ],
+      autoMadrasah: true
+    },
+    'rekap-progres': {
+      title: 'Rekap Kondisi Awal dan Progres Akreditasi',
+      fields: [
+        {id:'periode', label:'Periode', type:'text', placeholder:'Tahun ...'},
+        {id:'madrasah1', label:'Madrasah 1 - Nama', type:'text', placeholder:''},
+        {id:'kondisi_awal1', label:'Madrasah 1 - Kondisi Awal', type:'text', placeholder:'Belum terakreditasi / C / B'},
+        {id:'progres1', label:'Madrasah 1 - Progres', type:'text', placeholder:'Sudah memenuhi ... standar'},
+        {id:'madrasah2', label:'Madrasah 2 - Nama', type:'text', placeholder:''},
+        {id:'kondisi_awal2', label:'Madrasah 2 - Kondisi Awal', type:'text', placeholder:''},
+        {id:'progres2', label:'Madrasah 2 - Progres', type:'text', placeholder:''},
+        {id:'madrasah3', label:'Madrasah 3 - Nama', type:'text', placeholder:''},
+        {id:'kondisi_awal3', label:'Madrasah 3 - Kondisi Awal', type:'text', placeholder:''},
+        {id:'progres3', label:'Madrasah 3 - Progres', type:'text', placeholder:''},
+        {id:'madrasah4', label:'Madrasah 4 - Nama', type:'text', placeholder:''},
+        {id:'kondisi_awal4', label:'Madrasah 4 - Kondisi Awal', type:'text', placeholder:''},
+        {id:'progres4', label:'Madrasah 4 - Progres', type:'text', placeholder:''},
+        {id:'kesimpulan', label:'Kesimpulan Progres', type:'textarea', placeholder:'Dari ... madrasah sasaran, ... madrasah sudah mencapai target akreditasi minimal B'}
+      ]
+    },
+    'bukti-akreditasi': {
+      title: 'Bukti Pemenuhan Dokumen/Hasil Akreditasi',
+      fields: [
+        {id:'nama_madrasah', label:'Nama Madrasah', type:'text', placeholder:''},
+        {id:'npsn', label:'NPSN', type:'text', placeholder:''},
+        {id:'peringkat', label:'Peringkat Akreditasi', type:'text', placeholder:'A / B / C'},
+        {id:'nilai', label:'Nilai Akreditasi', type:'text', placeholder:'0-100'},
+        {id:'tanggal_sk', label:'Tanggal SK Akreditasi', type:'date', placeholder:''},
+        {id:'nomor_sk', label:'Nomor SK', type:'text', placeholder:''},
+        {id:'masa_berlaku', label:'Masa Berlaku', type:'text', placeholder:'... s.d. ...'},
+        {id:'catatan', label:'Catatan', type:'textarea', placeholder:'Dokumen pendukung yang telah dipenuhi: ...'}
+      ],
+      hasUpload: true
     }
   };
   return templates[docId]||{title:docId,fields:[]};
@@ -741,6 +1016,25 @@ function openDocEditor(rhk, docId){
   document.getElementById('modal-doc').classList.remove('hidden');
 
   if(template.hasHadir) renderHadirList();
+  if(template.hasUpload){
+    const uploadHtml=`<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <h4 style="margin-bottom:8px">Upload Bukti Fisik (Foto/Scan)</h4>
+      <input type="file" accept="image/*,.pdf" onchange="handleDocUpload(event)" style="margin-bottom:8px">
+      <div id="doc-upload-preview">${saved._upload?'<img src="'+saved._upload+'" class="file-preview">':''}</div>
+    </div>`;
+    document.getElementById('modal-doc-content').innerHTML+=uploadHtml;
+  }
+  if(template.autoMadrasah){
+    const mdData=getMadrasahData();
+    let mdHtml='<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)"><h4 style="margin-bottom:8px">Data Madrasah (otomatis dari menu Data Madrasah)</h4>';
+    if(mdData.length>0){
+      mdHtml+='<table style="width:100%;font-size:12px"><thead><tr><th>No</th><th>Nama</th><th>NPSN</th><th>Jenjang</th><th>Akreditasi</th></tr></thead><tbody>';
+      mdData.forEach((m,i)=>{mdHtml+=`<tr><td>${i+1}</td><td>${m.nama}</td><td>${m.npsn}</td><td>${m.jenjang}</td><td>${m.akreditasi}</td></tr>`});
+      mdHtml+='</tbody></table>';
+    } else { mdHtml+='<p style="color:var(--text-light);font-size:13px">Belum ada data. Silakan input di menu Data Madrasah terlebih dahulu.</p>'; }
+    mdHtml+='</div>';
+    document.getElementById('modal-doc-content').innerHTML+=mdHtml;
+  }
 }
 
 function closeDocModal(){
@@ -755,11 +1049,33 @@ function saveDocFromModal(){
     const el=document.getElementById('doc-field-'+f.id);
     if(el) data[f.id]=el.value;
   });
+  // Save upload if exists
+  const preview=document.getElementById('doc-upload-preview');
+  if(preview){
+    const img=preview.querySelector('img');
+    if(img) data._upload=img.src;
+  }
   data._savedAt=new Date().toISOString();
   setDocData(currentEditRhk,currentEditDocId,data);
   alert('Dokumen berhasil disimpan!');
   renderEvidenTab();
   renderDashboard();
+}
+
+function handleDocUpload(event){
+  const file=event.target.files[0];
+  if(!file)return;
+  if(file.size>5*1024*1024){alert('Ukuran file maksimal 5MB!');return}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const preview=document.getElementById('doc-upload-preview');
+    if(file.type.startsWith('image/')){
+      preview.innerHTML='<img src="'+e.target.result+'" class="file-preview">';
+    } else {
+      preview.innerHTML='<p style="color:var(--success)">&#10003; File berhasil diupload: '+file.name+'</p>';
+    }
+  };
+  reader.readAsDataURL(file);
 }
 
 function previewDocFromModal(){
@@ -1061,7 +1377,33 @@ function generateDocHTML(rhk, docId, forPrint){
       break;
 
     default:
-      html+=`<p>Template tidak ditemukan untuk: ${docId}</p>`;
+      // Generic template for new doc types
+      html+=`<div style="text-align:center;margin-bottom:24px"><h3 style="color:#000">${template.title}</h3><p>${data.kode}: ${data.nama}</p></div>`;
+      template.fields.forEach(f=>{
+        const val=v(f.id);
+        if(f.type==='textarea'){
+          html+=`<h4>${f.label}:</h4><p style="margin-bottom:16px;white-space:pre-line">${val}</p>`;
+        } else if(f.type==='date'){
+          html+=`<p><strong>${f.label}:</strong> ${formatTanggal(val)}</p>`;
+        } else {
+          html+=`<p><strong>${f.label}:</strong> ${val}</p>`;
+        }
+      });
+      // Show uploaded image if any
+      if(saved._upload){
+        html+=`<div style="margin-top:16px"><h4>Bukti Fisik:</h4><img src="${saved._upload}" style="max-width:100%;max-height:400px;border:1px solid #ccc;margin-top:8px"></div>`;
+      }
+      // Show madrasah data if autoMadrasah
+      if(template.autoMadrasah){
+        const mdData=getMadrasahData();
+        if(mdData.length>0){
+          html+=`<h4 style="margin-top:16px">Data Madrasah Binaan:</h4><table class="bordered"><thead><tr><th>No</th><th>Nama Madrasah</th><th>NPSN</th><th>Jenjang</th><th>Kepala Madrasah</th><th>Akreditasi</th><th>Guru</th><th>Siswa</th></tr></thead><tbody>`;
+          mdData.forEach((m,i)=>{html+=`<tr><td>${i+1}</td><td>${m.nama}</td><td>${m.npsn}</td><td>${m.jenjang}</td><td>${m.kamad}</td><td>${m.akreditasi}${m.nilai?' ('+m.nilai+')':''}</td><td>${m.guru||'-'}</td><td>${m.siswa||'-'}</td></tr>`});
+          html+=`</tbody></table>`;
+        }
+      }
+      // TTD
+      html+=`<div class="ttd-area"><div class="ttd-block"></div><div class="ttd-block"><p>${p.wilayah||'...'}, ${today}</p><p>Pengawas Madrasah,</p><div class="space"></div><p><u><strong>${p.nama}</strong></u></p><p>NIP. ${p.nip}</p></div></div>`;
   }
 
   html+=`</div>`;
@@ -1177,6 +1519,114 @@ function renderHadirList(){
   });
   html+='</tbody></table>';
   container.innerHTML=html;
+}
+
+// ============ DATA MADRASAH ============
+function getMadrasahData(){return JSON.parse(localStorage.getItem('ekinerja_madrasah')||'[]')}
+function setMadrasahData(d){localStorage.setItem('ekinerja_madrasah',JSON.stringify(d))}
+
+function renderMadrasahTab(){
+  const data=getMadrasahData();
+  // Stats
+  const mi=data.filter(m=>m.jenjang==='MI').length;
+  const mts=data.filter(m=>m.jenjang==='MTs').length;
+  const ma=data.filter(m=>m.jenjang==='MA').length;
+  const ra=data.filter(m=>m.jenjang==='RA').length;
+  const totalGuru=data.reduce((s,m)=>s+parseInt(m.guru||0),0);
+  const totalSiswa=data.reduce((s,m)=>s+parseInt(m.siswa||0),0);
+  document.getElementById('madrasah-stats').innerHTML=`
+    <div class="stats-grid">
+      <div class="stat-card"><div class="number">${data.length}</div><div class="label">Total Madrasah</div></div>
+      <div class="stat-card" style="background:linear-gradient(135deg,#1565c0,#42a5f5)"><div class="number">${ra}</div><div class="label">RA</div></div>
+      <div class="stat-card" style="background:linear-gradient(135deg,#2e7d32,#66bb6a)"><div class="number">${mi}</div><div class="label">MI</div></div>
+      <div class="stat-card" style="background:linear-gradient(135deg,#e65100,#ff9800)"><div class="number">${mts}</div><div class="label">MTs</div></div>
+      <div class="stat-card" style="background:linear-gradient(135deg,#6a1b9a,#ab47bc)"><div class="number">${ma}</div><div class="label">MA</div></div>
+      <div class="stat-card" style="background:linear-gradient(135deg,#004d40,#26a69a)"><div class="number">${totalGuru}</div><div class="label">Total Guru</div></div>
+      <div class="stat-card" style="background:linear-gradient(135deg,#bf360c,#ff7043)"><div class="number">${totalSiswa}</div><div class="label">Total Siswa</div></div>
+    </div>`;
+  // Table
+  const tbody=document.getElementById('madrasah-tbody');
+  if(data.length===0){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--text-light)">Belum ada data madrasah. Klik tombol "+ Tambah Madrasah" untuk menambah.</td></tr>';return}
+  let html='';
+  data.forEach((m,i)=>{
+    html+=`<tr><td>${i+1}</td><td>${m.nama}</td><td>${m.npsn}</td><td><span class="badge badge-success">${m.jenjang}</span></td><td>${m.kamad}</td><td><span class="badge ${m.akreditasi==='A'?'badge-success':m.akreditasi==='B'?'badge-warning':'badge-danger'}">${m.akreditasi}${m.nilai?' ('+m.nilai+')':''}</span></td><td>${m.guru||'-'}</td><td>${m.siswa||'-'}</td><td><button class="btn-sm btn-primary" onclick="editMadrasah('${m.id}')">Edit</button> <button class="btn-sm btn-danger" onclick="deleteMadrasah('${m.id}')">Hapus</button></td></tr>`;
+  });
+  tbody.innerHTML=html;
+}
+
+function openMadrasahForm(){
+  document.getElementById('madrasah-form-title').textContent='Tambah Data Madrasah';
+  document.getElementById('md-nama').value='';
+  document.getElementById('md-npsn').value='';
+  document.getElementById('md-alamat').value='';
+  document.getElementById('md-kamad').value='';
+  document.getElementById('md-nip-kamad').value='';
+  document.getElementById('md-jenjang').value='MI';
+  document.getElementById('md-akreditasi').value='B';
+  document.getElementById('md-nilai').value='';
+  document.getElementById('md-guru').value='';
+  document.getElementById('md-siswa').value='';
+  document.getElementById('md-keterangan').value='';
+  document.getElementById('md-edit-id').value='';
+  document.getElementById('modal-madrasah').classList.remove('hidden');
+}
+
+function closeMadrasahForm(){
+  document.getElementById('modal-madrasah').classList.add('hidden');
+}
+
+function saveMadrasah(){
+  const nama=document.getElementById('md-nama').value.trim();
+  if(!nama){alert('Nama Madrasah harus diisi!');return}
+  const entry={
+    id: document.getElementById('md-edit-id').value || Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+    nama: nama,
+    npsn: document.getElementById('md-npsn').value.trim(),
+    alamat: document.getElementById('md-alamat').value.trim(),
+    kamad: document.getElementById('md-kamad').value.trim(),
+    nipKamad: document.getElementById('md-nip-kamad').value.trim(),
+    jenjang: document.getElementById('md-jenjang').value,
+    akreditasi: document.getElementById('md-akreditasi').value,
+    nilai: document.getElementById('md-nilai').value,
+    guru: document.getElementById('md-guru').value,
+    siswa: document.getElementById('md-siswa').value,
+    keterangan: document.getElementById('md-keterangan').value.trim()
+  };
+  let data=getMadrasahData();
+  const editId=document.getElementById('md-edit-id').value;
+  if(editId){data=data.map(m=>m.id===editId?entry:m)}else{data.push(entry)}
+  setMadrasahData(data);
+  closeMadrasahForm();
+  renderMadrasahTab();
+  alert(editId?'Data madrasah berhasil diperbarui!':'Data madrasah berhasil ditambahkan!');
+}
+
+function editMadrasah(id){
+  const data=getMadrasahData();
+  const m=data.find(x=>x.id===id);
+  if(!m)return;
+  document.getElementById('madrasah-form-title').textContent='Edit Data Madrasah';
+  document.getElementById('md-nama').value=m.nama||'';
+  document.getElementById('md-npsn').value=m.npsn||'';
+  document.getElementById('md-alamat').value=m.alamat||'';
+  document.getElementById('md-kamad').value=m.kamad||'';
+  document.getElementById('md-nip-kamad').value=m.nipKamad||'';
+  document.getElementById('md-jenjang').value=m.jenjang||'MI';
+  document.getElementById('md-akreditasi').value=m.akreditasi||'B';
+  document.getElementById('md-nilai').value=m.nilai||'';
+  document.getElementById('md-guru').value=m.guru||'';
+  document.getElementById('md-siswa').value=m.siswa||'';
+  document.getElementById('md-keterangan').value=m.keterangan||'';
+  document.getElementById('md-edit-id').value=m.id;
+  document.getElementById('modal-madrasah').classList.remove('hidden');
+}
+
+function deleteMadrasah(id){
+  if(!confirm('Yakin ingin menghapus data madrasah ini?'))return;
+  let data=getMadrasahData();
+  data=data.filter(m=>m.id!==id);
+  setMadrasahData(data);
+  renderMadrasahTab();
 }
 
 // ============ INIT ON LOAD ============
